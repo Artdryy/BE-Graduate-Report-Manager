@@ -99,11 +99,9 @@ class UsersService {
     }
 
     const accessTokenPayload = { userId: user.id, roleId: user.role_id };
-    // --- AND UPDATE THIS ---
     const newAccessToken = jwt.sign(accessTokenPayload, envValues.JWT_SECRET, {
       expiresIn: envValues.ACCESS_TOKEN_EXPIRATION
     });
-    // -----------------------
 
     return { accessToken: newAccessToken };
   }

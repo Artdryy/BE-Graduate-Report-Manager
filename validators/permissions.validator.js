@@ -1,7 +1,6 @@
 import Joi from 'joi';
 
 class PermissionsValidator {
-  // --- Validadores existentes ---
   createPermission() {
     return Joi.object({
       permission: Joi.string().max(50).trim().required(),

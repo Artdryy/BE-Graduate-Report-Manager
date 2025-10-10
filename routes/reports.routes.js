@@ -1,11 +1,10 @@
 import ReportsController from '../controllers/reports.controller.js';
 import ReportsMiddleware from '../middlewares/reports.middleware.js';
-import upload from '../middlewares/upload.middleware.js';
 import { checkPermission } from '../middlewares/authorization.middleware.js';
 
 export default async function reportsRoutes(fastify) {
   fastify.post('/create',
-    { preHandler: [upload.single('pdf'), ReportsMiddleware.createReport, checkPermission('Reports', 'CREATE'),],}, ReportsController.createReport);
+    { preHandler: [ReportsMiddleware.createReport, checkPermission('Reports', 'CREATE')],}, ReportsController.createReport);
 
   fastify.get('/list', { preHandler: checkPermission('Reports', 'READ') },ReportsController.getReports);
 
@@ -19,7 +18,6 @@ export default async function reportsRoutes(fastify) {
     '/update/:report_id',
     {
       preHandler: [
-        upload.single('pdf'),
         ReportsMiddleware.updateReport,
         checkPermission('Reports', 'UPDATE'),
       ],

@@ -2,7 +2,6 @@ import { sequelize } from '../config/database.js';
 import { QueryTypes } from 'sequelize';
 
 class PermissionsRepository {
-  // --- CRUD de Permisos Individuales (Ya existente) ---
   async createPermission({ permission }) {
     const result = await sequelize.query(
       'CALL residencias.create_permission(?);',

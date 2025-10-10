@@ -3,7 +3,6 @@ import KeywordsMiddleware from '../middlewares/keywords.middleware.js';
 import { checkPermission } from '../middlewares/authorization.middleware.js';
 
 export default async function keywordsRoutes(fastify) {
-  // All routes require authentication (private routes)
   fastify.post('/create', { preHandler: [KeywordsMiddleware.createKeyword, checkPermission('Reports', 'CREATE')] }, KeywordsController.createKeyword);
   fastify.get('/list', { preHandler: [KeywordsMiddleware.getKeywords, checkPermission('Reports', 'READ')] }, KeywordsController.getKeywords);
   fastify.put('/update', { preHandler: [KeywordsMiddleware.updateKeyword, checkPermission('Reports', 'UPDATE')] }, KeywordsController.updateKeyword);

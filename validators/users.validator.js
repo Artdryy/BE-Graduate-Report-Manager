@@ -1,7 +1,6 @@
 import Joi from 'joi';
 
 class UsersValidator {
-  // --- Validadores para Rutas Privadas ---
   createUser() {
     return Joi.object({
       user_name: Joi.string().max(100).trim().required(),
@@ -33,7 +32,6 @@ class UsersValidator {
     });
   }
 
-  // --- Validadores para Rutas Públicas ---
   loginUser() {
     return Joi.object({
       user_name: Joi.string().required(),

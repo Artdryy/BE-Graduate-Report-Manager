@@ -11,6 +11,7 @@ import { handleError, handleNotFound } from '../middlewares/error.middleware.js'
 import UsersMiddleware from '../middlewares/users.middleware.js';  
 
 import { applyGlobalAuth } from '../middlewares/auth.middleware.js';
+import fastifyMultipart from '@fastify/multipart';
 
 const fastify = Fastify({
   logger: true,
@@ -22,6 +23,12 @@ fastify.register(fastifyHelmet, { contentSecurityPolicy: false });
 fastify.register(fastifyCors,   { origin: true, optionsSuccessStatus: 200 });
 fastify.register(fastifyFormbody);
 fastify.register(compress);
+fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  attachFieldsToBody: false 
+})
 
 // Decoraciones para los middleware
 fastify.decorate('usersMiddleware', UsersMiddleware)
@@ -49,6 +56,7 @@ applyGlobalAuth(fastify, {
     '/api/users/reset-password'        
   ]
 });
+
 
 // Rutas bajo /api
 fastify.register(router, { prefix: '/api' });

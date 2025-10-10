@@ -5,14 +5,32 @@ import path from 'path';
 
 class ReportsService {
   async createReport(data) {
-    const keywordsJson = JSON.stringify(data.keywords || []);
-    const reportData = { ...data, keywordsJson };
+    try {
+      console.log('Service received data:', data);
+      
+      if (!data.student_name || !data.control_number || !data.pdf_route) {
+        throw new Error('Missing required fields: student_name, control_number, and pdf_route are required');
+      }
 
-    const [result, error] = await catchError(
-      ReportsRepository.createReport(reportData)
-    );
-    if (error) throw error;
-    return result;
+      const keywordsJson = JSON.stringify(data.keywords || []);
+      const reportData = { ...data, keywordsJson };
+      
+      console.log('Calling repository with data:', reportData);
+
+      const [result, error] = await catchError(
+        ReportsRepository.createReport(reportData)
+      );
+      
+      if (error) {
+        console.error('Repository error:', error);
+        throw error;
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Service error:', error);
+      throw error;
+    }
   }
 
   async getReports() {

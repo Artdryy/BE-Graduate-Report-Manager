@@ -27,7 +27,7 @@ export default async function fastifyRoutes(fastify, options) {
     fastify.register(permissionsRoutes, { prefix: '/permissions' });
     
     // Semester Routes
-    fastify.register(semesterRoutes, { prefix: '/semester' });
+    fastify.register(semesterRoutes, { prefix: '/semesters' });
     
     // Keywords Routes
     fastify.register(keywordsRoutes, { prefix: '/keywords' });

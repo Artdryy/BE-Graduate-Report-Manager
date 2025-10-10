@@ -12,31 +12,60 @@ class ReportsRepository {
     semester_id,
     keywordsJson,
   }) {
-    await sequelize.query(
-      'call residencias.sp_create_report(?, ?, ?, ?, ?, ?, ?, ?, @p_report_id);',
-      {
-        replacements: [
-          student_name,
-          control_number,
-          major,
-          report_title,
-          pdf_route,
-          company_id,
-          semester_id,
-          keywordsJson,
-        ],
-        type: QueryTypes.RAW,
-      }
-    );
-    const [outParam] = await sequelize.query('select @p_report_id as id;');
-    return outParam[0];
+    try {
+      console.log('Repository executing createReport with params:', {
+        student_name,
+        control_number,
+        major,
+        report_title,
+        pdf_route,
+        company_id,
+        semester_id,
+        keywordsJson,
+      });
+
+      await sequelize.query(
+        'call residencias.create_report(?, ?, ?, ?, ?, ?, ?, ?, @p_report_id);',
+        {
+          replacements: [
+            student_name,
+            control_number,
+            major,
+            report_title,
+            pdf_route,
+            company_id,
+            semester_id,
+            keywordsJson,
+          ],
+          type: QueryTypes.RAW,
+        }
+      );
+
+      const [result] = await sequelize.query(
+        'SELECT @p_report_id as report_id;',
+        {
+          type: QueryTypes.SELECT,
+        }
+      );
+      
+      return result;
+    } catch (error) {
+      console.error('Repository error in createReport:', error);
+      throw error;
+    }
   }
 
   async getReports() {
-    const result = await sequelize.query('CALL residencias.sp_get_reports();', {
-      type: QueryTypes.SELECT,
-    });
-    return result[0];
+    try {
+      console.log('Repository executing getReports');
+      const result = await sequelize.query('CALL residencias.get_reports();', {
+        type: QueryTypes.SELECT,
+      });
+      return result[0];
+    } catch (error) {
+      console.error('Repository error in getReports:', error);
+      throw error;
+    }
   }
 
   async updateReport({
@@ -45,11 +74,11 @@ class ReportsRepository {
     report_title,
     company_id,
     semester_id,
-    pdf_route, // Now included
+    pdf_route,
     keywordsJson,
   }) {
     const result = await sequelize.query(
-      'CALL residencias.sp_update_report(?, ?, ?, ?, ?, ?, ?);',
+      'CALL residencias.update_report(?, ?, ?, ?, ?, ?, ?);',
       {
         replacements: [
           report_id,
@@ -67,7 +96,7 @@ class ReportsRepository {
   }
 
   async deleteReport({ report_id }) {
-    const result = await sequelize.query('CALL residencias.sp_delete_report(?);', {
+    const result = await sequelize.query('CALL residencias.delete_report(?);', {
       replacements: [report_id],
       type: QueryTypes.SELECT,
     });
@@ -75,7 +104,7 @@ class ReportsRepository {
   }
   
   async getReportPdfRoute({ report_id }) {
-    const result = await sequelize.query('CALL residencias.sp_get_report_pdf_route(?);', {
+    const result = await sequelize.query('CALL residencias.get_report_pdf_route(?);', {
       replacements: [report_id],
       type: QueryTypes.SELECT,
     });

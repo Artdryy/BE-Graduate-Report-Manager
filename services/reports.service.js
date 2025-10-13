@@ -43,9 +43,9 @@ class ReportsService {
     const oldReport = await ReportsRepository.getReportPdfRoute({ report_id: data.report_id });
     const oldPdfPath = oldReport ? oldReport.pdf_route : null;
 
-    const keywordsJson = JSON.stringify(data.keywords || []);
+    const keywordsJson = data.keywords || '[]'; 
     const reportData = { ...data, keywordsJson };
-    
+
     const [result, error] = await catchError(
       ReportsRepository.updateReport(reportData)
     );
@@ -62,7 +62,7 @@ class ReportsService {
     return result;
   }
 
-  async deleteReport(data) {
+async deleteReport(data) {
     const report = await ReportsRepository.getReportPdfRoute({ report_id: data.report_id });
     const pdfPath = report ? report.pdf_route : null;
     
@@ -73,13 +73,15 @@ class ReportsService {
 
     if (pdfPath) {
       try {
-        await fs.unlink(path.resolve(pdfPath));
+        const fullPath = path.resolve('uploads', pdfPath);
+        await fs.unlink(fullPath);
       } catch (e) {
-        console.error(`Failed to delete PDF: ${pdfPath}`, e);
+        console.error(`Failed to delete PDF file: ${fullPath}`, e);
       }
     }
     return result;
   }
+
 
   async getReportsByKeyword(data) {
       const [result, error] = await catchError(ReportsRepository.getReportsByKeyword(data));

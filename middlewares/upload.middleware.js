@@ -1,38 +1,39 @@
-import multer from 'multer';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
 
-const uploadDir = path.resolve('uploads/reports');
+class UploadMiddleware {
+  validatePdfUpload = async (req, reply) => {
+    if (!req.isMultipart()) {
+      return reply.code(400).send({ 
+        status: false, 
+        message: 'Request must be multipart/form-data', 
+        data: null 
+      });
+    }
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+    // Asegúrate de que el directorio de uploads existe
+    const uploadDir = path.resolve('uploads/reports');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    // Valida el tipo de archivo en el middleware
+    const parts = req.parts();
+    for await (const part of parts) {
+      if (part.file) {
+        if (part.mimetype !== 'application/pdf') {
+          return reply.code(400).send({ 
+            status: false, 
+            message: 'Only PDF files are allowed', 
+            data: null 
+          });
+        }
+        // Devuelve el stream al request para que el controlador lo procese
+        req.rawFile = part;
+        break;
+      }
+    }
+  }
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-    cb(null, 'report-' + uniqueSuffix + extension);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF files are allowed!'), false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 1024 * 1024 * 50,
-  },
-});
-
-export default upload;
+export default new UploadMiddleware();

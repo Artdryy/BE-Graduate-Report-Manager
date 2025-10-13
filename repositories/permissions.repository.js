@@ -47,13 +47,13 @@ class PermissionsRepository {
 
   async assignPermissionsToRole({ role_id, permissionsJson }) {
     const result = await sequelize.query(
-      'CALL residencias.assign_permissions_to_role(?, ?);',
+      'CALL residencias.update_role_permissions(?, ?);',
       {
         replacements: [role_id, permissionsJson],
-        type: QueryTypes.SELECT,
+        type: QueryTypes.RAW,
       }
     );
-    return result[0][0];
+    return result[0]
   }
 
   async getPermissionsForRole({ role_id }) {

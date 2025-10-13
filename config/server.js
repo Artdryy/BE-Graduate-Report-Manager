@@ -1,5 +1,7 @@
 import Fastify from 'fastify';
-
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import fastifyCors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import compress from '@fastify/compress';
@@ -20,7 +22,6 @@ const fastify = Fastify({
 
 // Middlewares de seguridad y parsing
 fastify.register(fastifyHelmet, { contentSecurityPolicy: false });
-fastify.register(fastifyCors,   { origin: true, optionsSuccessStatus: 200 });
 fastify.register(fastifyFormbody);
 fastify.register(compress);
 fastify.register(fastifyMultipart, {
@@ -29,6 +30,18 @@ fastify.register(fastifyMultipart, {
   },
   attachFieldsToBody: false 
 })
+fastify.register(fastifyCors, {
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], 
+});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+fastify.register(import('@fastify/static'), {
+  root: path.join(dirname(__dirname), 'uploads'),
+  prefix: '/uploads/',
+  decorateReply: false 
+});
 
 // Decoraciones para los middleware
 fastify.decorate('usersMiddleware', UsersMiddleware)
@@ -53,10 +66,10 @@ applyGlobalAuth(fastify, {
     '/api/users/refresh-token',
     '/api/users/logout',
     '/api/users/request-password-reset',
-    '/api/users/reset-password'        
+    '/api/users/reset-password',
+    '/uploads/'        
   ]
 });
-
 
 // Rutas bajo /api
 fastify.register(router, { prefix: '/api' });

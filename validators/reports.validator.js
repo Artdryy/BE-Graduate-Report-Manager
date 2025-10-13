@@ -7,6 +7,7 @@ class ReportsValidator {
       control_number: Joi.string().max(15).required(),
       major: Joi.string().max(100).allow(null, ''),
       report_title: Joi.string().max(255).allow(null, ''),
+      work_area: Joi.string().max(100).allow(null, ''),
       company_id: Joi.number().required(),
       semester_id: Joi.number().required(),
       keywords: Joi.string().custom((value, helpers) => {
@@ -23,13 +24,13 @@ class ReportsValidator {
     });
   }
 
-  updateReport() {
+updateReport() {
     return Joi.object({
-      report_id: Joi.number().required(),
-      student_name: Joi.string().max(100).required(),
+      student_name: Joi.string().max(100).optional(), 
       report_title: Joi.string().max(255).allow(null, ''),
-      company_id: Joi.number().required(),
-      semester_id: Joi.number().required(),
+      work_area: Joi.string().max(100).allow(null, ''),
+      company_id: Joi.number().optional(),
+      semester_id: Joi.number().optional(),
       keywords: Joi.string().custom((value, helpers) => {
         try {
           const parsed = JSON.parse(value);
@@ -41,8 +42,8 @@ class ReportsValidator {
           return helpers.error('any.invalid');
         }
       }).optional(),
-    });
-  }
+    }).unknown(true);
+}
 
   deleteReport() {
     return Joi.object({

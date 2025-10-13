@@ -73,6 +73,11 @@ class UsersService {
       throw new HttpError('Credenciales inválidas', 401);
     }
 
+    // Verificar si el usuario está activo antes de validar la contraseña
+    if (user.is_active === 0) {
+      throw new HttpError('Usuario inactivo. Contacte al administrador.', 403);
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new HttpError('Credenciales inválidas', 401);

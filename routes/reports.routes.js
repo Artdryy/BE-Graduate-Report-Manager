@@ -18,12 +18,12 @@ export default async function reportsRoutes(fastify) {
     '/update/:report_id',
     {
       preHandler: [
-        ReportsMiddleware.updateReport,
         checkPermission('Reports', 'UPDATE'),
       ],
     },
     ReportsController.updateReport
   );
+
 
   fastify.delete(
     '/delete/:report_id',

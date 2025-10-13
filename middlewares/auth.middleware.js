@@ -47,14 +47,17 @@ function applyGlobalAuth(fastify, options = {}) {
   const { useApiKey = false, publicRoutes = [] } = options;
 
   fastify.addHook('onRequest', async (request, reply) => {
-    const requestedUrl = request.url.split('?')[0]; 
+    const requestedUrl = request.url.split('?')[0];
     console.log('Ruta solicitada por Fastify:', requestedUrl);
 
-    if (publicRoutes.includes(requestedUrl)) {
-      console.log('Ruta pública detectada. Saltando validación de JWT.');
-      return; 
+    const isPublic = publicRoutes.some(route => requestedUrl.startsWith(route));
+
+    if (isPublic) {
+      console.log(`Ruta pública detectada (${requestedUrl}), coincide con (${publicRoutes.find(r => requestedUrl.startsWith(r))}). Saltando validación.`);
+      return;
     }
 
+    // El resto de tu lógica de validación se queda igual
     await validateJWT(request, reply);
 
     if (useApiKey) {

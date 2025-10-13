@@ -30,9 +30,10 @@ class PermissionsValidator {
       permissions: Joi.array().items(
         Joi.object({
           module_id: Joi.number().required(),
-          permission_id: Joi.number().required(),
+          is_visible: Joi.number().valid(0, 1).required(),
+          permissions: Joi.array().items(Joi.number()).required() 
         })
-      ).min(1).required(),
+      ).required()
     });
   }
 

@@ -6,7 +6,7 @@ export default async function usersRoutes(fastify) {
   // ==========================================================
   // --- Rutas Públicas (No requieren autenticación) ---
   // ==========================================================
-  fastify.post('/login', { preHandler: UsersMiddleware.loginUser }, UsersController.loginUser);
+  fastify.post('/login', { compress: false, preHandler: UsersMiddleware.loginUser }, UsersController.loginUser);
   fastify.post('/refresh-token', { preHandler: UsersMiddleware.refreshToken }, UsersController.refreshToken);
   fastify.post('/logout', { preHandler: UsersMiddleware.logout }, UsersController.logout);
 

@@ -1,4 +1,5 @@
 import UsersRepository from '../repositories/users.repository.js';
+import PermissionsRepository from '../repositories/permissions.repository.js'; 
 import { catchError } from '../helpers/catch.error.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -65,7 +66,6 @@ class UsersService {
     if (error) throw error;
     return result;
   }
-  
 
   async loginUser({ user_name, password }) {
     const user = await UsersRepository.findUserByName({ user_name });
@@ -73,7 +73,6 @@ class UsersService {
       throw new HttpError('Credenciales inválidas', 401);
     }
 
-    // Verificar si el usuario está activo antes de validar la contraseña
     if (user.is_active === 0) {
       throw new HttpError('Usuario inactivo. Contacte al administrador.', 403);
     }
@@ -83,6 +82,24 @@ class UsersService {
       throw new HttpError('Credenciales inválidas', 401);
     }
 
+    // --- Step 1: Get the complex data structure from the repository ---
+    const rawPermissionsResult = await PermissionsRepository.getPermissionsForRole({ role_id: user.role_id });
+
+    let permissions = []; // Default to an empty array
+
+    // --- Step 2: ✅ DEFINITIVE FIX - Handle the exact structure from your logs ---
+    // This checks for the structure: [ { "0": p1, "1": p2, ... } ]
+    if (Array.isArray(rawPermissionsResult) && rawPermissionsResult.length > 0 && typeof rawPermissionsResult[0] === 'object' && rawPermissionsResult[0] !== null) {
+      // This is the object that contains {"0": p1, "1": p2, ...}
+      const permissionsObject = rawPermissionsResult[0];
+      
+      // Object.values() correctly extracts [p1, p2, ...] into a proper array.
+      permissions = Object.values(permissionsObject);
+    } else {
+        console.warn('WARNING: Permissions data from repository was not in the expected format. User will have no permissions for this session.');
+    }
+
+    // --- Step 3: Continue with login ---
     const accessTokenPayload = { userId: user.id, roleId: user.role_id };
     const accessToken = jwt.sign(accessTokenPayload, envValues.JWT_SECRET, {
       expiresIn: envValues.ACCESS_TOKEN_EXPIRATION 
@@ -94,21 +111,8 @@ class UsersService {
 
     await UsersRepository.saveRefreshToken(user.id, refreshToken, expiresAt);
 
-    return { accessToken, refreshToken };
-  }
-
-  async refreshToken(token) {
-    const user = await UsersRepository.findUserByRefreshToken(token);
-    if (!user) {
-      throw new HttpError('Sesión inválida o expirada', 403);
-    }
-
-    const accessTokenPayload = { userId: user.id, roleId: user.role_id };
-    const newAccessToken = jwt.sign(accessTokenPayload, envValues.JWT_SECRET, {
-      expiresIn: envValues.ACCESS_TOKEN_EXPIRATION
-    });
-
-    return { accessToken: newAccessToken };
+    // Return the final, clean data object
+    return { accessToken, refreshToken, permissions };
   }
 
   async logoutUser(token) {

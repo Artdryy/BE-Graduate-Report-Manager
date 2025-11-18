@@ -38,7 +38,7 @@ class UsersController {
   loginUser = async (req, reply) => {
     const { user_name, password } = req.body;
     const tokens = await UsersService.loginUser({ user_name, password });
-    return reply.sendSuccess({ message: 'Login successful', data: tokens });
+    reply.sendSuccess({ message: 'Login successful', data: tokens });
   };
 
   refreshToken = async (req, reply) => {

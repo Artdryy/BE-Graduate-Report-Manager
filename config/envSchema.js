@@ -14,7 +14,7 @@ const envSchema = Joi.object({
     DATABASE_PORT: Joi.number().default(3306),
     API_KEY: Joi.string().optional(),
     JWT_SECRET: Joi.string().required(),
-    ACCESS_TOKEN_EXPIRATION: Joi.string().default('15m'),
+    ACCESS_TOKEN_EXPIRATION: Joi.string().default('90m'),
     REFRESH_TOKEN_EXPIRATION_DAYS: Joi.number().default(7),
 }).unknown()
 

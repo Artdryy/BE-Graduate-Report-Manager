@@ -35,6 +35,12 @@ class PermissionsController {
     const result = await PermissionsService.getPermissionsForRole({ role_id });
     reply.sendSuccess({ message: 'Permissions for role fetched successfully', data: result });
   };
+
+  getMyPermissions = async (req, reply) => {
+    const { roleId } = req.user; 
+    const result = await PermissionsService.getPermissionsForRole({ role_id: roleId });
+    reply.sendSuccess({ message: 'My permissions fetched successfully', data: result });
+  };
 }
 
 export default new PermissionsController();

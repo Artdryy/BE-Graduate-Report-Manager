@@ -7,8 +7,7 @@ export default async function permissionsRoutes(fastify) {
   fastify.get('/list', { compress: false, preHandler: [PermissionsMiddleware.getPermissions, checkPermission('Roles', 'READ')] }, PermissionsController.getPermissions);
   fastify.put('/update', { preHandler: [PermissionsMiddleware.updatePermission, checkPermission('Roles', 'UPDATE')] }, PermissionsController.updatePermission);
   fastify.delete('/delete/:permission_id', { preHandler: [PermissionsMiddleware.deletePermission, checkPermission('Roles', 'DELETE')] }, PermissionsController.deletePermission);
-
+  fastify.get('/mine', { compress: false }, PermissionsController.getMyPermissions);
   fastify.get('/role/:role_id', { compress: false, preHandler: [PermissionsMiddleware.getPermissionsForRole, checkPermission('Roles', 'READ')] }, PermissionsController.getPermissionsForRole);
-
   fastify.post('/assign-to-role', { preHandler: [PermissionsMiddleware.assignPermissions, checkPermission('Roles', 'UPDATE')] }, PermissionsController.assignPermissionsToRole);
 }

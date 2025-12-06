@@ -12,11 +12,6 @@ const transporter = nodemailer.createTransport({
 });
 
 class EmailService {
-  /**
-   * Envía un correo con el código de recuperación de contraseña.
-   * @param {string} to - El correo del destinatario.
-   * @param {string} code - El código de recuperación a enviar.
-   */
   async sendPasswordResetEmail(to, code) {
     try {
       const mailOptions = {

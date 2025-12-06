@@ -6,7 +6,7 @@ export default async function reportsRoutes(fastify) {
   fastify.post('/create',
     { preHandler: [ReportsMiddleware.createReport, checkPermission('Reports', 'CREATE')],}, ReportsController.createReport);
 
-  fastify.get('/list', { preHandler: checkPermission('Reports', 'READ') },ReportsController.getReports);
+  fastify.get('/list', { compress: false, preHandler: checkPermission('Reports', 'READ') },ReportsController.getReports);
 
   fastify.get(
     '/keyword/:keyword',
@@ -23,7 +23,6 @@ export default async function reportsRoutes(fastify) {
     },
     ReportsController.updateReport
   );
-
 
   fastify.delete(
     '/delete/:report_id',

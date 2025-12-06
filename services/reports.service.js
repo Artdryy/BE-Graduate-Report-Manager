@@ -82,7 +82,6 @@ async deleteReport(data) {
     return result;
   }
 
-
   async getReportsByKeyword(data) {
       const [result, error] = await catchError(ReportsRepository.getReportsByKeyword(data));
       if (error) throw error;

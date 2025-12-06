@@ -57,7 +57,6 @@ function applyGlobalAuth(fastify, options = {}) {
       return;
     }
 
-    // El resto de tu lógica de validación se queda igual
     await validateJWT(request, reply);
 
     if (useApiKey) {

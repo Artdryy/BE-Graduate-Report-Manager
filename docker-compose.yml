@@ -1,0 +1,58 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: residencias-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_USER: ${DATABASE_USER}
+      MARIADB_PASSWORD: ${DATABASE_PASSWORD}
+      MARIADB_DATABASE: ${DATABASE_NAME}
+    volumes:
+      # Datos persistentes
+      - datos_mariadb:/var/lib/mysql
+      # Scripts de inicializacion (solo se ejecutan la primera vez)
+      - ./init-db/01-inicializar.sh:/docker-entrypoint-initdb.d/01-inicializar.sh
+      - ./.db-tables:/docker-entrypoint-initdb.d/sql/tablas.sql
+      - ./.db-procedures:/docker-entrypoint-initdb.d/sql/procedimientos.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/artdryy/be-graduate-report-manager:latest
+    container_name: residencias-backend
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-3000}
+      DATABASE_HOST: mariadb
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_PORT: 3306
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRATION: ${ACCESS_TOKEN_EXPIRATION:-90m}
+      REFRESH_TOKEN_EXPIRATION_DAYS: ${REFRESH_TOKEN_EXPIRATION_DAYS:-7}
+      API_KEY: ${API_KEY:-}
+    volumes:
+      - datos_uploads:/app/uploads
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  frontend:
+    image: ghcr.io/artdryy/fe-graduate-report-manager:latest
+    container_name: residencias-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  datos_mariadb:
+  datos_uploads:

@@ -37,7 +37,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ACCESS_TOKEN_EXPIRATION: ${ACCESS_TOKEN_EXPIRATION:-90m}
       REFRESH_TOKEN_EXPIRATION_DAYS: ${REFRESH_TOKEN_EXPIRATION_DAYS:-7}
-      API_KEY: ${API_KEY:-}
+
     volumes:
       - datos_uploads:/app/uploads
     depends_on:

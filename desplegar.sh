@@ -17,14 +17,6 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
-# Iniciar sesion en GitHub Container Registry
-echo ""
-echo ">>> Iniciando sesion en $REGISTRO..."
-echo "Necesitas un Personal Access Token (PAT) con permiso 'read:packages'"
-echo "Generalo en: https://github.com/settings/tokens"
-echo ""
-docker login "$REGISTRO"
-
 # Descargar imagenes
 echo ""
 echo ">>> Descargando imagen del backend..."

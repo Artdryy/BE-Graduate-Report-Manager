@@ -64,7 +64,13 @@ class PermissionsRepository {
         type: QueryTypes.SELECT,
       }
     );
-    return result[0];
+    // Mapear campos para compatibilidad con el frontend
+    return Object.values(result[0]).map(row => ({
+      ...row,
+      permission: row.permission_name,
+      is_visible: 1,
+      is_granted: 1,
+    }));
   }
 }
 

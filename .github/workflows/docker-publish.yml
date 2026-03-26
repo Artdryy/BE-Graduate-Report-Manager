@@ -1,0 +1,44 @@
+name: Construir y publicar imagen Docker Backend
+
+on:
+  push:
+    branches: [master]
+
+env:
+  REGISTRO: ghcr.io
+  NOMBRE_IMAGEN: ${{ github.repository }}
+
+jobs:
+  construir-y-publicar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesion en GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRO }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extraer metadatos de Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRO }}/${{ env.NOMBRE_IMAGEN }}
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      - name: Construir y publicar imagen
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

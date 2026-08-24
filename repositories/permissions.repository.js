@@ -64,13 +64,11 @@ class PermissionsRepository {
         type: QueryTypes.SELECT,
       }
     );
-    // Mapear campos para compatibilidad con el frontend
-    return Object.values(result[0]).map(row => ({
-      ...row,
-      permission: row.permission_name,
-      is_visible: 1,
-      is_granted: 1,
-    }));
+    // El procedimiento ya devuelve permission, is_granted e is_visible con sus
+    // valores reales. Antes habia que fabricarlos aqui porque solo devolvia
+    // permission_name, pero fijarlos a 1 concedia de hecho todos los permisos
+    // y todos los modulos a cualquier rol que tuviera una sola fila.
+    return Object.values(result[0]);
   }
 }
 

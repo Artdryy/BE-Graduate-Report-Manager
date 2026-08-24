@@ -10,7 +10,7 @@ POST http://localhost:3000/api/semesters/create
 - **Content-Type**: application/json
 ```json
 {
-    "semester": "2025-2"
+    "semester": "Agosto - Diciembre 2025"
 }
 ```
 
@@ -59,7 +59,7 @@ All endpoints return responses in the following format:
     "message": "Semester created successfully",
     "data": {
         "id": 1,
-        "semester": "2025-2"
+        "semester": "Agosto - Diciembre 2025"
     }
 }
 ```
@@ -77,6 +77,11 @@ All endpoints return responses in the following format:
 - All routes require authentication via Bearer token
 - Semester values must be unique
 - Semester values are limited to 30 characters
-- Recommended format: "YYYY-N" where N is the semester number
+- Canonical format: "<Period> <Year>", i.e. "Enero - Junio 2025" or "Agosto - Diciembre 2025".
+  The frontend sorter (`src/utils/semesters.js`) reads the last space-separated token as
+  the year and looks for "AGO"/"DIC" in the leading text to identify the second period.
+  A format like "2025-2" makes both semesters of a year sort as a tie.
+- The two semesters of the current year are created automatically at backend startup;
+  older ones are added by an admin from the Semestres screen.
 - Deleting a semester will affect all reports associated with it
 - Consider checking for existing reports before deletion

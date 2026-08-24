@@ -4,8 +4,12 @@ import { envValues } from '../config/envSchema.js';
 
 async function validateApiKey(request, reply) {
   try {
-    const apiKey = request.headers['api-key'] || (request.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    // Si no hay API_KEY configurada la validacion queda desactivada.
     if (!globalConfig.apiKey) return;
+
+    // Solo la cabecera 'api-key': antes tambien se leia 'authorization', que es
+    // donde viaja el JWT, de modo que ambos valores se pisaban entre si.
+    const apiKey = request.headers['api-key'];
 
     if (!apiKey || apiKey !== globalConfig.apiKey) {
       return reply.status(401).send({ status: false, message: 'Unauthorized', data: null });
@@ -44,18 +48,17 @@ async function validateJWT(request, reply) {
 }
 
 function applyGlobalAuth(fastify, options = {}) {
-  const { useApiKey = false, publicRoutes = [] } = options;
+  const { useApiKey = false, publicRoutes = [], publicPrefixes = [] } = options;
+
+  // Coincidencia exacta, no startsWith: con startsWith una ruta como
+  // '/api/users/login-loquesea' tambien se habria saltado la autenticacion.
+  const rutasPublicas = new Set(publicRoutes);
 
   fastify.addHook('onRequest', async (request, reply) => {
     const requestedUrl = request.url.split('?')[0];
-    console.log('Ruta solicitada por Fastify:', requestedUrl);
 
-    const isPublic = publicRoutes.some(route => requestedUrl.startsWith(route));
-
-    if (isPublic) {
-      console.log(`Ruta pública detectada (${requestedUrl}), coincide con (${publicRoutes.find(r => requestedUrl.startsWith(r))}). Saltando validación.`);
-      return;
-    }
+    if (rutasPublicas.has(requestedUrl)) return;
+    if (publicPrefixes.some((prefijo) => requestedUrl.startsWith(prefijo))) return;
 
     await validateJWT(request, reply);
 

@@ -641,7 +641,10 @@ begin
         rmp.module_id,
         m.module_name,
         rmp.permission_id,
-        p.permission as permission_name
+        p.permission as permission,
+        p.permission as permission_name,
+        rmp.is_granted,
+        rm.is_visible
     from
         residencias.roles_modules_permissions rmp
     join
@@ -650,6 +653,9 @@ begin
         residencias.modules m on rmp.module_id = m.id
     join
         residencias.permissions p on rmp.permission_id = p.id
+    left join
+        residencias.roles_modules rm
+            on rm.role_id = rmp.role_id and rm.module_id = rmp.module_id
     where
         rmp.role_id = p_role_id
     order by

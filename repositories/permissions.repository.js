@@ -46,14 +46,17 @@ class PermissionsRepository {
   }
 
   async assignPermissionsToRole({ role_id, permissionsJson }) {
+    // El procedimiento real es assign_permissions_to_role. update_role_permissions
+    // no existe: la llamada fallaba siempre, asi que guardar permisos desde la
+    // interfaz nunca funciono.
     const result = await sequelize.query(
-      'CALL residencias.update_role_permissions(?, ?);',
+      'CALL residencias.assign_permissions_to_role(?, ?);',
       {
         replacements: [role_id, permissionsJson],
-        type: QueryTypes.RAW,
+        type: QueryTypes.SELECT,
       }
     );
-    return result[0]
+    return result[0][0];
   }
 
   async getPermissionsForRole({ role_id }) {

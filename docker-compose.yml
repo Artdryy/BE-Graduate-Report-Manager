@@ -3,6 +3,8 @@ services:
     image: mariadb:11
     container_name: residencias-db
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
       MARIADB_USER: ${DATABASE_USER}
@@ -15,8 +17,9 @@ services:
       - ./init-db/01-inicializar.sh:/docker-entrypoint-initdb.d/01-inicializar.sh
       - ./.db-tables:/docker-entrypoint-initdb.d/sql/tablas.sql
       - ./.db-procedures:/docker-entrypoint-initdb.d/sql/procedimientos.sql
-    ports:
-      - "3306:3306"
+    # Sin mapeo de puertos: la base de datos solo es accesible desde la red
+    # interna de compose. El backend la alcanza como DATABASE_HOST=mariadb.
+    # Para administrarla:  docker compose exec mariadb mariadb -u root -p
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -27,6 +30,8 @@ services:
     image: ghcr.io/artdryy/be-graduate-report-manager:latest
     container_name: residencias-backend
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     environment:
       PORT: ${PORT:-3000}
       DATABASE_HOST: mariadb
@@ -37,21 +42,36 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ACCESS_TOKEN_EXPIRATION: ${ACCESS_TOKEN_EXPIRATION:-90m}
       REFRESH_TOKEN_EXPIRATION_DAYS: ${REFRESH_TOKEN_EXPIRATION_DAYS:-7}
-
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      # Inicializacion automatica (superusuario, catalogo y semestres)
+      BOOTSTRAP_ENABLED: ${BOOTSTRAP_ENABLED:-true}
+      SUPERUSER_USER: ${SUPERUSER_USER}
+      SUPERUSER_EMAIL: ${SUPERUSER_EMAIL}
+      SUPERUSER_PASSWORD: ${SUPERUSER_PASSWORD}
+      SUPERUSER_ROLE_NAME: ${SUPERUSER_ROLE_NAME:-Superusuario}
     volumes:
       - datos_uploads:/app/uploads
     depends_on:
       mariadb:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   frontend:
     image: ghcr.io/artdryy/fe-graduate-report-manager:latest
     container_name: residencias-frontend
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   datos_mariadb:

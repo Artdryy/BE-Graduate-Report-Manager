@@ -17,6 +17,16 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Que el archivo exista no basta: hay que asegurarse de que los valores de
+# ejemplo fueron reemplazados, o el despliegue saldria con secretos conocidos.
+# Solo se miran las asignaciones reales (VARIABLE=valor), no los comentarios.
+if grep -qE '^[[:space:]]*[A-Z_]+=cambiar_' .env; then
+    echo "ERROR: .env todavia contiene valores de ejemplo (cambiar_*)."
+    echo "Configura estas variables antes de desplegar:"
+    grep -nE '^[[:space:]]*[A-Z_]+=cambiar_' .env | sed 's/^/  /'
+    exit 1
+fi
+
 # Descargar imagenes
 echo ""
 echo ">>> Descargando imagen del backend..."

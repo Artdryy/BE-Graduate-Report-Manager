@@ -122,6 +122,7 @@ begin
     where rmp.role_id = p_role_id
       and m.module_name = p_module_name
       and p.permission = p_permission_name
+      and rmp.is_granted = 1
     limit 1;
 
     select has_permission as granted;
@@ -594,9 +595,12 @@ create or replace procedure residencias.assign_permissions_to_role(
 )
 begin
     declare v_module_id bigint;
+    declare v_is_visible tinyint;
     declare v_permission_id bigint;
     declare i int default 0;
-    declare v_json_length int;
+    declare j int default 0;
+    declare v_modules_length int;
+    declare v_perms_length int;
 
     if not exists (select 1 from residencias.roles where id = p_role_id) then
         signal sqlstate '45000' set message_text = 'role not found';
@@ -607,17 +611,26 @@ begin
     delete from residencias.roles_modules_permissions where role_id = p_role_id;
     delete from residencias.roles_modules where role_id = p_role_id;
 
-    set v_json_length = json_length(p_permissions_json);
+    set v_modules_length = json_length(p_permissions_json);
 
-    while i < v_json_length do
+    while i < v_modules_length do
         set v_module_id = json_unquote(json_extract(p_permissions_json, concat('$[', i, '].module_id')));
-        set v_permission_id = json_unquote(json_extract(p_permissions_json, concat('$[', i, '].permission_id')));
+        set v_is_visible = json_unquote(json_extract(p_permissions_json, concat('$[', i, '].is_visible')));
 
-        insert ignore into residencias.roles_modules (role_id, module_id, is_visible)
-        values (p_role_id, v_module_id, 1);
+        insert into residencias.roles_modules (role_id, module_id, is_visible)
+        values (p_role_id, v_module_id, ifnull(v_is_visible, 0));
 
-        insert into residencias.roles_modules_permissions (role_id, module_id, permission_id, is_granted)
-        values (p_role_id, v_module_id, v_permission_id, 1);
+        set v_perms_length = ifnull(json_length(json_extract(p_permissions_json, concat('$[', i, '].permissions'))), 0);
+        set j = 0;
+
+        while j < v_perms_length do
+            set v_permission_id = json_unquote(json_extract(p_permissions_json, concat('$[', i, '].permissions[', j, ']')));
+
+            insert into residencias.roles_modules_permissions (role_id, module_id, permission_id, is_granted)
+            values (p_role_id, v_module_id, v_permission_id, 1);
+
+            set j = j + 1;
+        end while;
 
         set i = i + 1;
     end while;
@@ -636,22 +649,25 @@ begin
     end if;
 
     select
-        rmp.role_id,
-        r.role_name,
-        rmp.module_id,
+        p_role_id as role_id,
+        (select role_name from residencias.roles where id = p_role_id) as role_name,
+        m.id as module_id,
         m.module_name,
-        rmp.permission_id,
-        p.permission as permission_name
+        p.id as permission_id,
+        p.permission as permission,
+        p.permission as permission_name,
+        ifnull(rmp.is_granted, 0) as is_granted,
+        ifnull(rm.is_visible, 0) as is_visible
     from
+        residencias.modules m
+    cross join
+        residencias.permissions p
+    left join
         residencias.roles_modules_permissions rmp
-    join
-        residencias.roles r on rmp.role_id = r.id
-    join
-        residencias.modules m on rmp.module_id = m.id
-    join
-        residencias.permissions p on rmp.permission_id = p.id
-    where
-        rmp.role_id = p_role_id
+            on rmp.role_id = p_role_id and rmp.module_id = m.id and rmp.permission_id = p.id
+    left join
+        residencias.roles_modules rm
+            on rm.role_id = p_role_id and rm.module_id = m.id
     order by
         m.module_name, p.permission;
 end;
